@@ -48,7 +48,7 @@ class RCTBluetoothSerialService {
 
     /**
      * Constructor. Prepares a new RCTBluetoothSerialModule session.
-     * 
+     *
      * @param module Module which handles service events
      */
     RCTBluetoothSerialService(RCTBluetoothSerialModule module) {
@@ -74,7 +74,7 @@ class RCTBluetoothSerialService {
 
     /**
      * Start the ConnectThread to initiate a connection to a remote device.
-     * 
+     *
      * @param device The BluetoothDevice to connect
      */
     synchronized void connect(BluetoothDevice device) {
@@ -203,7 +203,7 @@ class RCTBluetoothSerialService {
 
     /**
      * Start the ConnectedThread to begin managing a Bluetooth connection
-     * 
+     *
      * @param socket The BluetoothSocket on which the connection was made
      * @param device The BluetoothDevice that has been connected
      */
@@ -233,7 +233,7 @@ class RCTBluetoothSerialService {
 
     /**
      * Indicate that the connection attempt failed and notify the UI Activity.
-     * 
+     *
      * @param device The BluetoothDevice that has been failed to connect
      */
     private void connectionFailed(BluetoothDevice device) {
@@ -243,7 +243,7 @@ class RCTBluetoothSerialService {
 
     /**
      * Indicate that the connection was lost and notify the UI Activity.
-     * 
+     *
      * @param device The BluetoothDevice that has been lost
      */
     private void connectionLost(BluetoothDevice device) {
@@ -281,6 +281,22 @@ class RCTBluetoothSerialService {
                 mConnectedThreads.remove(id);
             }
         }
+    }
+
+    private String analysisBufferData (byte [] buffer, int bytes) {
+        StringBuffer data = new StringBuffer();
+        if (bytes > 0  && (buffer.length >= bytes)) {
+            for (int i = 0; i < bytes; i ++) {
+                if (bytes == 1 || i == bytes - 1) {
+                    data.append((buffer [i] + ""));
+                }
+                else {
+                    data.append((buffer [i] + "")).append("&*&");
+                }
+
+            }
+        }
+        return data.toString();
     }
 
     /**
@@ -434,9 +450,12 @@ class RCTBluetoothSerialService {
             while (true) {
                 try {
                     bytes = mmInStream.read(buffer); // Read from the InputStream
-                    String data = new String(buffer, 0, bytes, "ISO-8859-1");
+                    String data = analysisBufferData(buffer, bytes);
+//                    String data = new String(buffer, 0, bytes, "ISO-8859-1");analysisBufferData
+                    Log.e("获取结果",data);
                     mModule.onData(id, data); // Send the new data String to the UI Activity
                 } catch (Exception e) {
+
                     Log.e(TAG, "disconnected", e);
                     mModule.onError(e);
                     connectionLost(mmDevice);
@@ -447,7 +466,7 @@ class RCTBluetoothSerialService {
 
         /**
          * Write to the connected OutStream.
-         * 
+         *
          * @param buffer The bytes to write
          */
         void write(byte[] buffer) {
@@ -470,5 +489,7 @@ class RCTBluetoothSerialService {
                 mModule.onError(e);
             }
         }
+
+
     }
 }
